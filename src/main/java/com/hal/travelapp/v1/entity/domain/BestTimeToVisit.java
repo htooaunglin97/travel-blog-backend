@@ -1,5 +1,6 @@
-package com.hal.travelapp.v1.entity;
+package com.hal.travelapp.v1.entity.domain;
 
+import com.hal.travelapp.v1.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;

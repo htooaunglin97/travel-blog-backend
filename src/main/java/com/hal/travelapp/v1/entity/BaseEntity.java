@@ -21,6 +21,8 @@ public class BaseEntity
 
     private Instant updatedAt;
 
+    private boolean deleted;
+
     @PrePersist
     protected void onCreate()
     {
