@@ -7,5 +7,5 @@ import com.hal.travelapp.v1.entity.domain.Role;
 
 @Repository
 public interface RoleRepo extends JpaRepository<Role, Long> {
-
+    Optional<Role> findByName(com.hal.travelapp.v1.entity.enums.RoleEnum name);
 }
