@@ -89,7 +89,7 @@ class AuthServiceTest {
         assertThat(response.userData().email()).isEqualTo("john@example.com");
         assertThat(response.userData().name()).isEqualTo("John Doe");
         assertThat(response.tokenData().accessToken()).isEqualTo("test-token");
-        assertThat(response.tokenData().accessTokenExpiresAt()).isNotNull();
+        assertThat(response.tokenData().expiresAt()).isNotNull();
 
         verify(userRepo).findByEmail("john@example.com");
         verify(roleRepo).findByName(RoleEnum.ROLE_USER);

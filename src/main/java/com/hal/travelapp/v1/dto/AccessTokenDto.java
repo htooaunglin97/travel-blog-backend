@@ -4,6 +4,6 @@ import java.time.Instant;
 
 public record AccessTokenDto(
         String accessToken,
-        Instant accessTokenExpiresAt
+        Instant expiresAt
 ) {
 }

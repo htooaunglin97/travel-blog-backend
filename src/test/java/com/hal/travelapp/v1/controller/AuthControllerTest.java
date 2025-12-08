@@ -43,7 +43,7 @@ public class AuthControllerTest implements WithAssertions
         assertThat(body.getData().userData().email()).isEqualTo("mike@gmail.com");
         assertThat(body.getData().userData().name()).isEqualTo("Mike");
         assertThat(body.getData().tokenData().accessToken()).isNotNull();
-        assertThat(body.getData().tokenData().accessTokenExpiresAt()).isNotNull();
+        assertThat(body.getData().tokenData().expiresAt()).isNotNull();
     }
 
     @Test
@@ -72,6 +72,6 @@ public class AuthControllerTest implements WithAssertions
         assertThat(body.getData().userData().email()).isEqualTo("john@example.com");
         assertThat(body.getData().userData().name()).isEqualTo("John");
         assertThat(body.getData().tokenData().accessToken()).isNotNull();
-        assertThat(body.getData().tokenData().accessTokenExpiresAt()).isNotNull();
+        assertThat(body.getData().tokenData().expiresAt()).isNotNull();
     }
 }
