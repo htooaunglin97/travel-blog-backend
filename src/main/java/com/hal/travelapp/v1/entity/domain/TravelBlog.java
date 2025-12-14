@@ -16,12 +16,38 @@ public class TravelBlog extends BaseEntity
 
     private String title;
 
-    private String description;
+    @Column(length = 2000)
+    private String mainPhotoUrl;
 
-    private String imageUrl;
+    @Column(length = 1000)
+    private String paragraph1;
+
+    @Column(length = 1000)
+    private String paragraph2;
+
+    @Column(length = 1000)
+    private String paragraph3;
+
+    @Column(length = 2000)
+    private String midPhoto1Url;
+
+    @Column(length = 2000)
+    private String midPhoto2Url;
+
+    @Column(length = 2000)
+    private String midPhoto3Url;
+
+    @Column(length = 2000)
+    private String sidePhotoUrl;
 
     @ManyToOne
-    private StateAndDivision stateAndDivision;
+    private City city;
+
+    @ManyToOne
+    private User author;
+
+    @Enumerated(EnumType.STRING)
+    private BlogStatus status = BlogStatus.PENDING;
 
     @OneToOne(mappedBy = "travelBlog", cascade = CascadeType.ALL)
     private BestTimeToVisit bestTimeToVisit;
@@ -33,5 +59,11 @@ public class TravelBlog extends BaseEntity
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<TravelCategory> travelCategory;
+
+    public enum BlogStatus {
+        PENDING,
+        APPROVED,
+        REJECTED
+    }
 
 }

@@ -3,7 +3,7 @@ package com.hal.travelapp.v1.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.proxy.HibernateProxy;
+
 
 import java.time.Instant;
 
@@ -37,9 +37,4 @@ public class BaseEntity
     }
 
 
-    @Override
-    public final int hashCode()
-    {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
-    }
 }
