@@ -1,13 +1,13 @@
 package com.hal.travelapp.v1.service;
 
-import com.hal.travelapp.v1.dto.BlogCreateRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
-import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
-import com.hal.travelapp.v1.service.impl.BlogService;
+import com.hal.travelapp.v1.service.impl.BlogServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +41,7 @@ class BlogServiceTest {
     private UserRepo userRepo;
 
     @InjectMocks
-    private BlogService blogService;
+    private BlogServiceImpl blogServiceImpl;
 
     private User author;
     private City city;
@@ -116,7 +116,7 @@ class BlogServiceTest {
         });
 
         // When
-        BlogDto result = blogService.createBlog(createRequest, 1L);
+        BlogDto result = blogServiceImpl.createBlog(createRequest, 1L);
 
         // Then
         assertThat(result).isNotNull();
@@ -154,7 +154,7 @@ class BlogServiceTest {
         when(cityRepo.findById(999L)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> blogService.createBlog(createRequest, 1L))
+        assertThatThrownBy(() -> blogServiceImpl.createBlog(createRequest, 1L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("City not found");
 
@@ -168,7 +168,7 @@ class BlogServiceTest {
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
 
         // When
-        BlogDto result = blogService.getBlogById(1L);
+        BlogDto result = blogServiceImpl.getBlogById(1L);
 
         // Then
         assertThat(result).isNotNull();
@@ -186,7 +186,7 @@ class BlogServiceTest {
         when(travelBlogRepo.findByIdAndDeletedFalse(999L)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> blogService.getBlogById(999L))
+        assertThatThrownBy(() -> blogServiceImpl.getBlogById(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Blog not found");
 
@@ -199,7 +199,7 @@ class BlogServiceTest {
         when(travelBlogRepo.findByDeletedFalse()).thenReturn(List.of(blog));
 
         // When
-        List<BlogDto> result = blogService.getAllBlogs();
+        List<BlogDto> result = blogServiceImpl.getAllBlogs();
 
         // Then
         assertThat(result).isNotNull();
@@ -234,7 +234,7 @@ class BlogServiceTest {
         when(travelBlogRepo.save(any(TravelBlog.class))).thenReturn(blog);
 
         // When
-        BlogDto result = blogService.updateBlog(1L, updateRequest);
+        BlogDto result = blogServiceImpl.updateBlog(1L, updateRequest);
 
         // Then
         assertThat(result).isNotNull();
@@ -247,13 +247,13 @@ class BlogServiceTest {
         // Given
         BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
                 "Updated Title",
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         when(travelBlogRepo.findByIdAndDeletedFalse(999L)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> blogService.updateBlog(999L, updateRequest))
+        assertThatThrownBy(() -> blogServiceImpl.updateBlog(999L, updateRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Blog not found");
 
@@ -268,7 +268,7 @@ class BlogServiceTest {
         when(travelBlogRepo.save(any(TravelBlog.class))).thenReturn(blog);
 
         // When
-        blogService.deleteBlog(1L);
+        blogServiceImpl.deleteBlog(1L);
 
         // Then
         assertThat(blog.isDeleted()).isTrue();
@@ -282,7 +282,7 @@ class BlogServiceTest {
         when(travelBlogRepo.findByAuthorIdAndDeletedFalse(1L)).thenReturn(List.of(blog));
 
         // When
-        List<BlogDto> result = blogService.getBlogsByAuthor(1L);
+        List<BlogDto> result = blogServiceImpl.getBlogsByAuthor(1L);
 
         // Then
         assertThat(result).isNotNull();
@@ -299,7 +299,7 @@ class BlogServiceTest {
         when(travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)).thenReturn(List.of(blog));
 
         // When
-        List<BlogDto> result = blogService.getApprovedBlogs();
+        List<BlogDto> result = blogServiceImpl.getApprovedBlogs();
 
         // Then
         assertThat(result).isNotNull();

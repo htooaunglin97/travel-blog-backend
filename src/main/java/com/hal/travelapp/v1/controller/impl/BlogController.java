@@ -2,8 +2,14 @@ package com.hal.travelapp.v1.controller.impl;
 
 import com.hal.travelapp.v1.controller.BlogApi;
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.entity.BaseEntity;
+import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.UserRepo;
-import com.hal.travelapp.v1.service.impl.BlogService;
+import com.hal.travelapp.v1.service.BlogService;
+import com.hal.travelapp.v1.service.impl.BlogServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +25,7 @@ public class BlogController implements BlogApi {
     private final BlogService blogService;
     private final UserRepo userRepo;
 
-    public BlogController(BlogService blogService, UserRepo userRepo) {
+    public BlogController(BlogServiceImpl blogService, UserRepo userRepo) {
         this.blogService = blogService;
         this.userRepo = userRepo;
     }
@@ -128,8 +134,8 @@ public class BlogController implements BlogApi {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             return userRepo.findByEmail(email)
-                    .map(user -> user.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .map(BaseEntity::getId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         }
         throw new RuntimeException("User not authenticated");
     }

@@ -1,34 +1,31 @@
 package com.hal.travelapp.v1.service.impl;
 
-import com.hal.travelapp.v1.dto.BlogCreateRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
-import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
+import com.hal.travelapp.v1.service.BlogService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class BlogService {
+@RequiredArgsConstructor
+public class BlogServiceImpl implements BlogService {
 
     private final TravelBlogRepo travelBlogRepo;
     private final CityRepo cityRepo;
     private final TravelCategoryRepo travelCategoryRepo;
     private final UserRepo userRepo;
 
-    public BlogService(TravelBlogRepo travelBlogRepo, CityRepo cityRepo, 
-                      TravelCategoryRepo travelCategoryRepo, UserRepo userRepo) {
-        this.travelBlogRepo = travelBlogRepo;
-        this.cityRepo = cityRepo;
-        this.travelCategoryRepo = travelCategoryRepo;
-        this.userRepo = userRepo;
-    }
 
     public BlogDto createBlog(BlogCreateRequestDto createRequest, Long authorId) {
         // Validate city exists
@@ -42,9 +39,7 @@ public class BlogService {
         // Get categories
         Set<TravelCategory> categories = Set.of();
         if (createRequest.categoryIds() != null && !createRequest.categoryIds().isEmpty()) {
-            categories = travelCategoryRepo.findByIdIn(createRequest.categoryIds())
-                    .stream()
-                    .collect(Collectors.toSet());
+            categories = new HashSet<>(travelCategoryRepo.findByIdIn(createRequest.categoryIds()));
         }
 
         // Create blog entity
@@ -128,9 +123,7 @@ public class BlogService {
             blog.setCity(city);
         }
         if (updateRequest.categoryIds() != null && !updateRequest.categoryIds().isEmpty()) {
-            Set<TravelCategory> categories = travelCategoryRepo.findByIdIn(updateRequest.categoryIds())
-                    .stream()
-                    .collect(Collectors.toSet());
+            Set<TravelCategory> categories = new HashSet<>(travelCategoryRepo.findByIdIn(updateRequest.categoryIds()));
             blog.setTravelCategory(categories);
         }
         if (updateRequest.bestTimeStartMonth() != null && updateRequest.bestTimeEndMonth() != null) {
