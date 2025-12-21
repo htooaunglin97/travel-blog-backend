@@ -45,6 +45,17 @@ public class ApplicationExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(InvalidActionException.class)
+    public ResponseEntity<ApiError> handleInvalidActionException(InvalidActionException ex) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_ACTION",
+                ex.getMessage(),
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationException(MethodArgumentNotValidException ex) {
         String errors = ex.getBindingResult()

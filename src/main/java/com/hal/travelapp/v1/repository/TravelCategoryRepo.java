@@ -12,3 +12,4 @@ public interface TravelCategoryRepo extends JpaRepository<TravelCategory, Long> 
     List<TravelCategory> findByIdIn(Set<Long> ids);
 }
 
+

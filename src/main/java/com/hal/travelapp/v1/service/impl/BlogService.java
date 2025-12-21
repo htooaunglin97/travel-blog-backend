@@ -6,6 +6,7 @@ import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
+import com.hal.travelapp.v1.service.BlogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class BlogService {
+public class BlogServiceImpl implements BlogService {
 
     private final TravelBlogRepo travelBlogRepo;
     private final CityRepo cityRepo;
@@ -30,6 +31,7 @@ public class BlogService {
         this.userRepo = userRepo;
     }
 
+    @Override
     public BlogDto createBlog(BlogCreateRequestDto createRequest, Long authorId) {
         // Validate city exists
         City city = cityRepo.findById(createRequest.cityId())
@@ -77,19 +79,30 @@ public class BlogService {
         return mapToDto(savedBlog);
     }
 
+    @Override
     public BlogDto getBlogById(Long id) {
+        // Only return approved blogs for public viewing
         TravelBlog blog = travelBlogRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+        
+        // Only show approved blogs to public
+        if (blog.getStatus() != TravelBlog.BlogStatus.APPROVED) {
+            throw new ResourceNotFoundException("Blog not found with id: " + id);
+        }
+        
         return mapToDto(blog);
     }
 
+    @Override
     public List<BlogDto> getAllBlogs() {
-        return travelBlogRepo.findByDeletedFalse()
+        // Only return approved blogs for public viewing
+        return travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)
                 .stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Override
     public BlogDto updateBlog(Long id, BlogUpdateRequestDto updateRequest) {
         TravelBlog blog = travelBlogRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
@@ -148,6 +161,7 @@ public class BlogService {
         return mapToDto(updatedBlog);
     }
 
+    @Override
     public void deleteBlog(Long id) {
         TravelBlog blog = travelBlogRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
@@ -155,6 +169,7 @@ public class BlogService {
         travelBlogRepo.save(blog);
     }
 
+    @Override
     public List<BlogDto> getBlogsByAuthor(Long authorId) {
         return travelBlogRepo.findByAuthorIdAndDeletedFalse(authorId)
                 .stream()
@@ -162,6 +177,7 @@ public class BlogService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public List<BlogDto> getApprovedBlogs() {
         return travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)
                 .stream()
@@ -169,7 +185,8 @@ public class BlogService {
                 .collect(Collectors.toList());
     }
 
-    private BlogDto mapToDto(TravelBlog blog) {
+    @Override
+    public BlogDto mapToDto(TravelBlog blog) {
         return new BlogDto(
                 blog.getId(),
                 blog.getTitle(),

@@ -7,7 +7,7 @@ import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
-import com.hal.travelapp.v1.service.impl.BlogService;
+import com.hal.travelapp.v1.service.impl.BlogServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +41,7 @@ class BlogServiceTest {
     private UserRepo userRepo;
 
     @InjectMocks
-    private BlogService blogService;
+    private BlogServiceImpl blogService;
 
     private User author;
     private City city;
@@ -224,8 +224,7 @@ class BlogServiceTest {
                 "new-side.jpg",
                 1L,
                 4L,
-                6L,
-                Set.of(1L)
+                6L
         );
 
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
@@ -309,4 +308,5 @@ class BlogServiceTest {
         verify(travelBlogRepo).findApprovedBlogs(TravelBlog.BlogStatus.APPROVED);
     }
 }
+
 

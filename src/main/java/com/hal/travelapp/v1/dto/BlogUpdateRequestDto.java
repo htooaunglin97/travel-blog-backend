@@ -2,8 +2,6 @@ package com.hal.travelapp.v1.dto;
 
 import jakarta.validation.constraints.Size;
 
-import java.util.Set;
-
 public record BlogUpdateRequestDto(
         @Size(max = 200, message = "Title must not exceed 200 characters")
         String title,
@@ -31,9 +29,9 @@ public record BlogUpdateRequestDto(
 
         Long bestTimeStartMonth,
 
-        Long bestTimeEndMonth,
+        Long bestTimeEndMonth
 
-        Set<Long> categoryIds
 ) {
 }
+
 

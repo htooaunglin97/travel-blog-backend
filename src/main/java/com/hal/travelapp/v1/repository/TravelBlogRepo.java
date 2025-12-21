@@ -24,3 +24,4 @@ public interface TravelBlogRepo extends JpaRepository<TravelBlog, Long> {
     List<TravelBlog> findApprovedBlogs(@Param("status") TravelBlog.BlogStatus status);
 }
 
+

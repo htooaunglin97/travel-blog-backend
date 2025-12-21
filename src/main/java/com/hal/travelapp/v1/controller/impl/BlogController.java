@@ -3,12 +3,11 @@ package com.hal.travelapp.v1.controller.impl;
 import com.hal.travelapp.v1.controller.BlogApi;
 import com.hal.travelapp.v1.dto.*;
 import com.hal.travelapp.v1.repository.UserRepo;
-import com.hal.travelapp.v1.service.impl.BlogService;
+import com.hal.travelapp.v1.service.BlogService;
+import com.hal.travelapp.v1.utils.SecurityContextUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,7 +25,7 @@ public class BlogController implements BlogApi {
 
     @Override
     public ResponseEntity<ApiSuccess<BlogDto>> createBlog(@org.springframework.web.bind.annotation.RequestBody @Valid BlogCreateRequestDto request) {
-        Long authorId = getCurrentUserId();
+        Long authorId = SecurityContextUtil.getCurrentUserId(userRepo);
         BlogDto blogDto = blogService.createBlog(request, authorId);
 
         ApiSuccess<BlogDto> body = new ApiSuccess<>(
@@ -121,17 +120,6 @@ public class BlogController implements BlogApi {
         );
 
         return ResponseEntity.ok(body);
-    }
-
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            return userRepo.findByEmail(email)
-                    .map(user -> user.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-        }
-        throw new RuntimeException("User not authenticated");
     }
 }
 
