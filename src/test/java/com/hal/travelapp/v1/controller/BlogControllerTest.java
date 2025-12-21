@@ -1,6 +1,9 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.repository.*;
@@ -222,7 +225,7 @@ public class BlogControllerTest implements WithAssertions {
 
         BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
                 "Updated Title",
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         HttpEntity<BlogUpdateRequestDto> request = new HttpEntity<>(updateRequest, getAuthHeaders());

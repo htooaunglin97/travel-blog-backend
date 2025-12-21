@@ -1,4 +1,4 @@
-package com.hal.travelapp.v1.dto;
+package com.hal.travelapp.v1.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

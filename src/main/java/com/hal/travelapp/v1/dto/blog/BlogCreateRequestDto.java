@@ -1,4 +1,4 @@
-package com.hal.travelapp.v1.dto;
+package com.hal.travelapp.v1.dto.blog;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

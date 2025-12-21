@@ -1,9 +1,10 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.ApiSuccess;
-import com.hal.travelapp.v1.dto.BlogCreateRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
-import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

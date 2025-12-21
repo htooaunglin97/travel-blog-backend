@@ -1,6 +1,9 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.auth.LoginRequestDto;
+import com.hal.travelapp.v1.dto.auth.LoginResponseDto;
+import com.hal.travelapp.v1.dto.auth.UserSignUpRequestDto;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

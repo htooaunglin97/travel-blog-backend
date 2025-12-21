@@ -1,6 +1,9 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.auth.LoginRequestDto;
+import com.hal.travelapp.v1.dto.auth.LoginResponseDto;
+import com.hal.travelapp.v1.dto.auth.UserSignUpRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
