@@ -2,6 +2,7 @@ package com.hal.travelapp.v1.controller.impl;
 
 import com.hal.travelapp.v1.controller.AdminApi;
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.repository.UserRepo;
 import com.hal.travelapp.v1.service.AdminService;
 import com.hal.travelapp.v1.utils.SecurityContextUtil;

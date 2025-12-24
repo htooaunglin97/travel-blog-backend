@@ -1,8 +1,8 @@
 package com.hal.travelapp.v1.service;
 
-import com.hal.travelapp.v1.dto.BlogCreateRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
-import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
@@ -224,7 +224,8 @@ class BlogServiceTest {
                 "new-side.jpg",
                 1L,
                 4L,
-                6L
+                6L,
+                Set.of(1L)
         );
 
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
@@ -246,7 +247,9 @@ class BlogServiceTest {
         // Given
         BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
                 "Updated Title",
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null,
+                null, null, null, null, null, 4L,
+                null
         );
 
         when(travelBlogRepo.findByIdAndDeletedFalse(999L)).thenReturn(Optional.empty());

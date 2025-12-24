@@ -1,6 +1,7 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.*;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

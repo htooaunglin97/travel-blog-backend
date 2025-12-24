@@ -3,7 +3,7 @@ package com.hal.travelapp.v1.service;
 import com.hal.travelapp.v1.dto.AdminApprovalRequestDto;
 import com.hal.travelapp.v1.dto.BlogApprovalRequestDto;
 import com.hal.travelapp.v1.dto.CertifiedUserRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
 
 import java.util.List;
 

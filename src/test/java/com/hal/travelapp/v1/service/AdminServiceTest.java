@@ -2,9 +2,10 @@ package com.hal.travelapp.v1.service;
 
 import com.hal.travelapp.v1.dto.AdminApprovalRequestDto;
 import com.hal.travelapp.v1.dto.BlogApprovalRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.CertifiedUserRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
+import com.hal.travelapp.v1.entity.enums.RequestStatus;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
@@ -86,7 +87,7 @@ class AdminServiceTest {
         pendingRequest = new CertifiedUserRequest();
         pendingRequest.setId(1L);
         pendingRequest.setUser(regularUser);
-        pendingRequest.setStatus(CertifiedUserRequest.RequestStatus.PENDING);
+        pendingRequest.setStatus(RequestStatus.PENDING);
         pendingRequest.setCreatedAt(Instant.now());
         pendingRequest.setUpdatedAt(Instant.now());
         pendingRequest.setDeleted(false);

@@ -4,6 +4,7 @@ import com.hal.travelapp.v1.dto.CertifiedUserRequestDto;
 import com.hal.travelapp.v1.dto.CertifiedUserRequestResponseDto;
 import com.hal.travelapp.v1.entity.domain.CertifiedUserRequest;
 import com.hal.travelapp.v1.entity.domain.User;
+import com.hal.travelapp.v1.entity.enums.RequestStatus;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.CertifiedUserRequestRepo;
 import com.hal.travelapp.v1.repository.UserRepo;
@@ -33,7 +34,7 @@ public class CertifiedUserServiceImpl implements CertifiedUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         // Check if there's already a pending request
-        if (certifiedUserRequestRepo.findByUserIdAndStatus(userId, CertifiedUserRequest.RequestStatus.PENDING)
+        if (certifiedUserRequestRepo.findByUserIdAndStatus(userId, RequestStatus.PENDING)
                 .isPresent()) {
             throw new RuntimeException("A pending certification request already exists for this user");
         }
@@ -41,7 +42,7 @@ public class CertifiedUserServiceImpl implements CertifiedUserService {
         // Create new request
         CertifiedUserRequest request = new CertifiedUserRequest();
         request.setUser(user);
-        request.setStatus(CertifiedUserRequest.RequestStatus.PENDING);
+        request.setStatus(RequestStatus.PENDING);
 
         CertifiedUserRequest savedRequest = certifiedUserRequestRepo.save(request);
 
@@ -62,7 +63,7 @@ public class CertifiedUserServiceImpl implements CertifiedUserService {
 
     @Override
     public List<CertifiedUserRequestDto> getAllPendingRequests() {
-        return certifiedUserRequestRepo.findByStatusAndDeletedFalse(CertifiedUserRequest.RequestStatus.PENDING)
+        return certifiedUserRequestRepo.findByStatusAndDeletedFalse(RequestStatus.PENDING)
                 .stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());

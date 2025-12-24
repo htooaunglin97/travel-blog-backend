@@ -2,9 +2,10 @@ package com.hal.travelapp.v1.service.impl;
 
 import com.hal.travelapp.v1.dto.AdminApprovalRequestDto;
 import com.hal.travelapp.v1.dto.BlogApprovalRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.CertifiedUserRequestDto;
 import com.hal.travelapp.v1.entity.domain.*;
+import com.hal.travelapp.v1.entity.enums.RequestStatus;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
@@ -12,6 +13,7 @@ import com.hal.travelapp.v1.exception.InvalidActionException;
 import com.hal.travelapp.v1.service.AdminService;
 import com.hal.travelapp.v1.service.BlogService;
 import com.hal.travelapp.v1.utils.UserRoleUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
     private final CertifiedUserRequestRepo certifiedUserRequestRepo;
@@ -28,17 +31,6 @@ public class AdminServiceImpl implements AdminService {
     private final RoleRepo roleRepo;
     private final BlogService blogService;
 
-    public AdminServiceImpl(CertifiedUserRequestRepo certifiedUserRequestRepo,
-                           TravelBlogRepo travelBlogRepo,
-                           UserRepo userRepo,
-                           RoleRepo roleRepo,
-                           BlogService blogService) {
-        this.certifiedUserRequestRepo = certifiedUserRequestRepo;
-        this.travelBlogRepo = travelBlogRepo;
-        this.userRepo = userRepo;
-        this.roleRepo = roleRepo;
-        this.blogService = blogService;
-    }
 
     @Override
     public CertifiedUserRequestDto approveOrRejectCertificationRequest(AdminApprovalRequestDto request, Long adminId) {
@@ -52,7 +44,7 @@ public class AdminServiceImpl implements AdminService {
 
         // Update request status
         if ("APPROVE".equalsIgnoreCase(request.action())) {
-            certificationRequest.setStatus(CertifiedUserRequest.RequestStatus.APPROVED);
+            certificationRequest.setStatus(RequestStatus.APPROVED);
             certificationRequest.setReviewedBy(admin);
 
             // Update user role to CERTIFIED_USER
@@ -61,7 +53,7 @@ public class AdminServiceImpl implements AdminService {
             user.setRole(certifiedRole);
             userRepo.save(user);
         } else if ("REJECT".equalsIgnoreCase(request.action())) {
-            certificationRequest.setStatus(CertifiedUserRequest.RequestStatus.REJECTED);
+            certificationRequest.setStatus(RequestStatus.REJECTED);
             certificationRequest.setReviewedBy(admin);
             certificationRequest.setRejectionReason(request.rejectionReason());
         } else {

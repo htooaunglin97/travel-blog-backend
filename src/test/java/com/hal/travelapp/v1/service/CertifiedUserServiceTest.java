@@ -44,12 +44,11 @@ class CertifiedUserServiceTest {
     private CertifiedUserServiceImpl certifiedUserService;
 
     private User regularUser;
-    private Role userRole;
     private CertifiedUserRequest pendingRequest;
 
     @BeforeEach
     void setUp() {
-        userRole = new Role(RoleEnum.ROLE_USER);
+        Role userRole = new Role(RoleEnum.ROLE_USER);
         userRole.setId(1L);
 
         regularUser = new User();

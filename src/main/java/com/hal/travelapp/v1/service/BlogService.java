@@ -1,8 +1,8 @@
 package com.hal.travelapp.v1.service;
 
-import com.hal.travelapp.v1.dto.BlogCreateRequestDto;
-import com.hal.travelapp.v1.dto.BlogDto;
-import com.hal.travelapp.v1.dto.BlogUpdateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
+import com.hal.travelapp.v1.dto.blog.BlogDto;
+import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.TravelBlog;
 
 import java.util.List;
