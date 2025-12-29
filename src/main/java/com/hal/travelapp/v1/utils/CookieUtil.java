@@ -24,8 +24,9 @@ public class CookieUtil {
         // HttpOnly cookie - contains the JWT (browser cannot read it)
         ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
                 .httpOnly(true)                     // JS cannot access
-                .secure(false)                       // HTTPS only (set to false if testing on HTTP)
+                .secure(true)                       // HTTPS only (set to false if testing on HTTP)
                 .path("/")
+                .partitioned(true)
                 .sameSite("None")                  // needed for cross-origin cookies
                 .maxAge(Duration.ofSeconds(expiresInSeconds))
                 .build();
@@ -33,7 +34,8 @@ public class CookieUtil {
         // Readable cookie - frontend can access for expiry checks
         ResponseCookie expiresCookie = ResponseCookie.from(EXPIRES_COOKIE, String.valueOf(expiresInSeconds))
                 .httpOnly(false)                    // frontend can read it
-                .secure(false)
+                .secure(true)
+                .partitioned(true)
                 .path("/")
                 .sameSite("None")
                 .maxAge(Duration.ofSeconds(expiresInSeconds))
@@ -51,9 +53,10 @@ public class CookieUtil {
     private void clearCookie(HttpServletResponse response, String name) {
         ResponseCookie cookie = ResponseCookie.from(name, "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .sameSite("None")
+                .partitioned(true)
                 .maxAge(0)
                 .build();
 

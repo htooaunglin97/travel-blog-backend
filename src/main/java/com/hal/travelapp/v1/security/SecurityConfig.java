@@ -51,13 +51,8 @@ public class SecurityConfig {
 
         // Use allowedOriginPatterns for wildcard support
         configuration.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://192.168.*.*:5173",
-                "http://localhost:5174",
-                "http://127.0.0.1:5174",
-                "http://192.168.*.*:5174",
-                "http://192.168.0.148:5174",
+                "http://192.168.0.247:3000",
+                "http://192.168.0.124:3000",
                 "*"
         ));
 
