@@ -1,8 +1,9 @@
 package com.hal.travelapp.v1.utils;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -17,24 +18,29 @@ public class CookieUtil {
 
         long expiresInSeconds = Duration.between(Instant.now(), expiresAt).getSeconds();
         if (expiresInSeconds < 0) {
-            expiresInSeconds = 0; // token already expired or almost expired
+            expiresInSeconds = 0;
         }
 
+        // HttpOnly cookie - contains the JWT (browser cannot read it)
+        ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
+                .httpOnly(true)                     // JS cannot access
+                .secure(false)                       // HTTPS only (set to false if testing on HTTP)
+                .path("/")
+                .sameSite("None")                  // needed for cross-origin cookies
+                .maxAge(Duration.ofSeconds(expiresInSeconds))
+                .build();
 
-        Cookie accessTokenCookie = new Cookie(ACCESS_TOKEN_COOKIE, token);
-        accessTokenCookie.setHttpOnly(true);             // cannot be accessed by JS
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setSecure(true);               // only https
-        accessTokenCookie.setMaxAge((int) expiresInSeconds);
+        // Readable cookie - frontend can access for expiry checks
+        ResponseCookie expiresCookie = ResponseCookie.from(EXPIRES_COOKIE, String.valueOf(expiresInSeconds))
+                .httpOnly(false)                    // frontend can read it
+                .secure(false)
+                .path("/")
+                .sameSite("None")
+                .maxAge(Duration.ofSeconds(expiresInSeconds))
+                .build();
 
-        Cookie expiresCookie = new Cookie(EXPIRES_COOKIE, String.valueOf(expiresInSeconds));
-        expiresCookie.setHttpOnly(false);                // frontend can read this
-        expiresCookie.setPath("/");
-        expiresCookie.setSecure(true);
-        expiresCookie.setMaxAge((int) expiresInSeconds);
-
-        response.addCookie(accessTokenCookie);
-        response.addCookie(expiresCookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, expiresCookie.toString());
     }
 
     public void clearAuthCookies(HttpServletResponse response) {
@@ -43,10 +49,14 @@ public class CookieUtil {
     }
 
     private void clearCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, "");
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .sameSite("None")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
