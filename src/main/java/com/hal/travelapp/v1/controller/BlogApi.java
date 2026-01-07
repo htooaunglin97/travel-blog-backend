@@ -1,10 +1,12 @@
 package com.hal.travelapp.v1.controller;
 
 import com.hal.travelapp.v1.dto.ApiSuccess;
+import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +22,9 @@ public interface BlogApi {
     ResponseEntity<ApiSuccess<BlogDto>> getBlogById(@PathVariable Long id);
 
     @GetMapping
-    ResponseEntity<ApiSuccess<List<BlogDto>>> getAllBlogs();
+    ResponseEntity<ApiSuccess<PageResult<BlogDto>>> getAllBlogs(
+           Pageable pageable
+    );
 
     @PutMapping("/{id}")
     ResponseEntity<ApiSuccess<BlogDto>> updateBlog(@PathVariable Long id, @RequestBody BlogUpdateRequestDto request);
@@ -32,5 +36,7 @@ public interface BlogApi {
     ResponseEntity<ApiSuccess<List<BlogDto>>> getBlogsByAuthor(@PathVariable Long authorId);
 
     @GetMapping("/approved")
-    ResponseEntity<ApiSuccess<List<BlogDto>>> getApprovedBlogs();
+    ResponseEntity<ApiSuccess<PageResult<BlogDto>>> getApprovedBlogs(
+            Pageable pageable
+    );
 }

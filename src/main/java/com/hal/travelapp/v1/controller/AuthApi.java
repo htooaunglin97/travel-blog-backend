@@ -20,6 +20,7 @@ public interface AuthApi {
     ResponseEntity<ApiSuccess<LoginResponseDto>> registerUser(UserSignUpRequestDto req,
                                                               HttpServletResponse response);
 
+
     @PostMapping("/login")
     ResponseEntity<ApiSuccess<LoginResponseDto>> login(LoginRequestDto req,
                                                        HttpServletResponse response);

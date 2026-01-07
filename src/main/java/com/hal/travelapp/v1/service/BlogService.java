@@ -1,9 +1,11 @@
 package com.hal.travelapp.v1.service;
 
+import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import com.hal.travelapp.v1.entity.domain.TravelBlog;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -12,7 +14,7 @@ public interface BlogService {
     
     BlogDto getBlogById(Long id);
     
-    List<BlogDto> getAllBlogs();
+    PageResult<BlogDto> getAllBlogs(Pageable pageable);
     
     BlogDto updateBlog(Long id, BlogUpdateRequestDto updateRequest);
     
@@ -20,7 +22,7 @@ public interface BlogService {
     
     List<BlogDto> getBlogsByAuthor(Long authorId);
     
-    List<BlogDto> getApprovedBlogs();
+    PageResult<BlogDto> getApprovedBlogs(Pageable pageable);
     
     BlogDto mapToDto(TravelBlog blog);
 }

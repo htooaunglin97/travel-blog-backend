@@ -1,5 +1,6 @@
 package com.hal.travelapp.v1.service.impl;
 
+import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
@@ -7,7 +8,10 @@ import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
 import com.hal.travelapp.v1.service.BlogService;
+import com.hal.travelapp.v1.service.mapper.BlogMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,12 +92,14 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public List<BlogDto> getAllBlogs() {
+    public PageResult<BlogDto> getAllBlogs(Pageable pageable) {
         // Only return approved blogs for public viewing
-        return travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        Page<TravelBlog> blogPage =  travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable);
+
+        Page<BlogDto> blogDtoPage = blogPage.map(this::mapToDto);
+
+
+        return PageResult.of(blogDtoPage);
     }
 
     @Override
@@ -170,11 +176,12 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public List<BlogDto> getApprovedBlogs() {
-        return travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public PageResult<BlogDto> getApprovedBlogs(Pageable pageable) {
+        Page<TravelBlog> blogPage = travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable);
+
+        Page<BlogDto> blogDtoPage = blogPage.map(this::mapToDto);
+
+        return PageResult.of(blogDtoPage);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hal.travelapp.v1.service;
 
+import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
 import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 
 import java.time.Instant;
 import java.util.List;
@@ -196,17 +198,23 @@ class BlogServiceTest {
     @Test
     void shouldGetAllBlogs() {
         // Given
-        when(travelBlogRepo.findByDeletedFalse()).thenReturn(List.of(blog));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+        Page<TravelBlog> blogPage = new PageImpl<>(List.of(blog), pageable, 1);
+
 
         // When
-        List<BlogDto> result = blogService.getAllBlogs();
+        PageResult<BlogDto> result = blogService.getAllBlogs(pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).title()).isEqualTo("Amazing Yangon");
-
-        verify(travelBlogRepo).findByDeletedFalse();
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().getFirst().title()).isEqualTo("Amazing Yangon");
+        assertThat(result.pageNumber()).isEqualTo(0);
+        assertThat(result.pageSize()).isEqualTo(10);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.first()).isTrue();
+        assertThat(result.last()).isTrue();
     }
 
     @Test
@@ -289,26 +297,29 @@ class BlogServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).authorId()).isEqualTo(1L);
+        assertThat(result.getFirst().authorId()).isEqualTo(1L);
 
         verify(travelBlogRepo).findByAuthorIdAndDeletedFalse(1L);
     }
 
     @Test
     void shouldGetApprovedBlogs() {
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+        Page<TravelBlog> blogPage = new PageImpl<>(List.of(blog), pageable, 1);
         // Given
         blog.setStatus(TravelBlog.BlogStatus.APPROVED);
-        when(travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED)).thenReturn(List.of(blog));
+        when(travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable)).thenReturn(blogPage);
 
         // When
-        List<BlogDto> result = blogService.getApprovedBlogs();
+        PageResult<BlogDto> result = blogService.getApprovedBlogs(pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).status()).isEqualTo("APPROVED");
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().getFirst().status()).isEqualTo("APPROVED");
 
-        verify(travelBlogRepo).findApprovedBlogs(TravelBlog.BlogStatus.APPROVED);
+        verify(travelBlogRepo).findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable);
     }
 }
 
