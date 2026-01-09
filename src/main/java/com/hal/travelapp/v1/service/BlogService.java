@@ -27,3 +27,5 @@ public interface BlogService {
     BlogDto mapToDto(TravelBlog blog);
 }
 
+
+

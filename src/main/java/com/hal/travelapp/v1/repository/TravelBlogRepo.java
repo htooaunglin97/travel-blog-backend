@@ -27,3 +27,5 @@ public interface TravelBlogRepo extends JpaRepository<TravelBlog, Long> {
 }
 
 
+
+

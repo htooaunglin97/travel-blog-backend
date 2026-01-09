@@ -23,3 +23,5 @@ public interface AdminApi {
     ResponseEntity<ApiSuccess<List<BlogDto>>> getAllPendingBlogs();
 }
 
+
+

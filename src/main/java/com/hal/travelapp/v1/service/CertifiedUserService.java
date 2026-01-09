@@ -13,3 +13,5 @@ public interface CertifiedUserService {
     List<CertifiedUserRequestDto> getAllPendingRequests();
 }
 
+
+

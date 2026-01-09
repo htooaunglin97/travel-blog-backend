@@ -21,3 +21,5 @@ public interface CertifiedUserApi {
     ResponseEntity<ApiSuccess<List<CertifiedUserRequestDto>>> getAllPendingRequests();
 }
 
+
+

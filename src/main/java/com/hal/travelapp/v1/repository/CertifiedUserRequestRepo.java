@@ -20,3 +20,5 @@ public interface CertifiedUserRequestRepo extends JpaRepository<CertifiedUserReq
     List<CertifiedUserRequest> findByUserIdAndDeletedFalseOrderByCreatedAtDesc(Long userId);
 }
 
+
+
