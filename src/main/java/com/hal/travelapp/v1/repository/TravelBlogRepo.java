@@ -24,6 +24,21 @@ public interface TravelBlogRepo extends JpaRepository<TravelBlog, Long> {
     
     @Query("SELECT b FROM TravelBlog b WHERE b.deleted = false AND b.status = :status")
     Page<TravelBlog> findApprovedBlogs(@Param("status") TravelBlog.BlogStatus status, Pageable pageable);
+    
+    @Query(value = """
+        SELECT b.* FROM travel_blog_tbl b
+        LEFT JOIN blog_like_tbl bl ON bl.blog_id = b.id AND bl.deleted = false
+        WHERE b.deleted = false 
+        AND b.status = :status
+        AND (:cursorId IS NULL OR b.id < :cursorId)
+        GROUP BY b.id
+        ORDER BY COUNT(bl.id) DESC, b.id DESC
+    """, nativeQuery = true)
+    List<TravelBlog> findFeaturedBlogs(
+        @Param("status") TravelBlog.BlogStatus status,
+        @Param("cursorId") Long cursorId,
+        org.springframework.data.domain.Pageable pageable
+    );
 }
 
 

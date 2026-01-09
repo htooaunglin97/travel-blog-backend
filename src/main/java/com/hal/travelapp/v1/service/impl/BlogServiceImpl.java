@@ -1,5 +1,6 @@
 package com.hal.travelapp.v1.service.impl;
 
+import com.hal.travelapp.v1.dto.CursorPageResult;
 import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
@@ -11,6 +12,7 @@ import com.hal.travelapp.v1.service.BlogService;
 import com.hal.travelapp.v1.service.mapper.BlogMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,8 @@ public class BlogServiceImpl implements BlogService {
     private final CityRepo cityRepo;
     private final TravelCategoryRepo travelCategoryRepo;
     private final UserRepo userRepo;
+    private final BlogLikeRepo blogLikeRepo;
+    private final FavoriteBlogRepo favoriteBlogRepo;
 
 
     @Override
@@ -89,6 +93,20 @@ public class BlogServiceImpl implements BlogService {
         }
         
         return mapToDto(blog);
+    }
+
+    @Override
+    public BlogDto getBlogById(Long id, Long userId) {
+        // Only return approved blogs for public viewing
+        TravelBlog blog = travelBlogRepo.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+        
+        // Only show approved blogs to public
+        if (blog.getStatus() != TravelBlog.BlogStatus.APPROVED) {
+            throw new ResourceNotFoundException("Blog not found with id: " + id);
+        }
+        
+        return mapToDto(blog, userId);
     }
 
     @Override
@@ -185,7 +203,42 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CursorPageResult<BlogDto> getFeaturedBlogs(String cursor, int pageSize, Long userId) {
+        Long cursorId = null;
+        if (cursor != null && !cursor.isEmpty()) {
+            try {
+                cursorId = Long.parseLong(cursor);
+            } catch (NumberFormatException e) {
+                // Invalid cursor, treat as null
+            }
+        }
+
+        Pageable pageable = PageRequest.of(0, pageSize + 1); // Fetch one extra to check if there's more
+        List<TravelBlog> blogs = travelBlogRepo.findFeaturedBlogs(
+                TravelBlog.BlogStatus.APPROVED,
+                cursorId,
+                pageable
+        );
+
+        boolean hasNext = blogs.size() > pageSize;
+        List<TravelBlog> blogsToReturn = hasNext ? blogs.subList(0, pageSize) : blogs;
+
+        List<BlogDto> blogDtos = blogsToReturn.stream()
+                .map(blog -> userId != null ? mapToDto(blog, userId) : mapToDto(blog))
+                .collect(Collectors.toList());
+
+        String nextCursor = null;
+        if (hasNext && !blogsToReturn.isEmpty()) {
+            nextCursor = String.valueOf(blogsToReturn.get(blogsToReturn.size() - 1).getId());
+        }
+
+        return CursorPageResult.of(blogDtos, nextCursor, hasNext, pageSize);
+    }
+
+    @Override
     public BlogDto mapToDto(TravelBlog blog) {
+        long likeCount = blogLikeRepo.countLikesByBlogId(blog.getId());
         return new BlogDto(
                 blog.getId(),
                 blog.getTitle(),
@@ -210,6 +263,47 @@ public class BlogServiceImpl implements BlogService {
                 blog.getTravelCategory() != null ? blog.getTravelCategory().stream()
                         .map(TravelCategory::getName)
                         .collect(Collectors.toSet()) : Set.of(),
+                likeCount,
+                null, // isLiked - null for unauthenticated users
+                null, // isFavorited - null for unauthenticated users
+                blog.getCreatedAt(),
+                blog.getUpdatedAt()
+        );
+    }
+
+    @Override
+    public BlogDto mapToDto(TravelBlog blog, Long userId) {
+        long likeCount = blogLikeRepo.countLikesByBlogId(blog.getId());
+        boolean isLiked = blogLikeRepo.existsByUserIdAndBlogId(userId, blog.getId());
+        boolean isFavorited = favoriteBlogRepo.existsByUserIdAndBlogId(userId, blog.getId());
+        
+        return new BlogDto(
+                blog.getId(),
+                blog.getTitle(),
+                blog.getMainPhotoUrl(),
+                blog.getParagraph1(),
+                blog.getParagraph2(),
+                blog.getParagraph3(),
+                blog.getMidPhoto1Url(),
+                blog.getMidPhoto2Url(),
+                blog.getMidPhoto3Url(),
+                blog.getSidePhotoUrl(),
+                blog.getCity() != null ? blog.getCity().getId() : null,
+                blog.getCity() != null ? blog.getCity().getName() : null,
+                blog.getAuthor() != null ? blog.getAuthor().getId() : null,
+                blog.getAuthor() != null ? blog.getAuthor().getName() : null,
+                blog.getStatus() != null ? blog.getStatus().name() : null,
+                blog.getBestTimeToVisit() != null ? (long) blog.getBestTimeToVisit().getStartMonth() : null,
+                blog.getBestTimeToVisit() != null ? (long) blog.getBestTimeToVisit().getEndMonth() : null,
+                blog.getTravelCategory() != null ? blog.getTravelCategory().stream()
+                        .map(TravelCategory::getId)
+                        .collect(Collectors.toSet()) : Set.of(),
+                blog.getTravelCategory() != null ? blog.getTravelCategory().stream()
+                        .map(TravelCategory::getName)
+                        .collect(Collectors.toSet()) : Set.of(),
+                likeCount,
+                isLiked,
+                isFavorited,
                 blog.getCreatedAt(),
                 blog.getUpdatedAt()
         );

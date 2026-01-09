@@ -53,6 +53,12 @@ public class BlogControllerTest implements WithAssertions {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private com.hal.travelapp.v1.repository.BlogLikeRepo blogLikeRepo;
+
+    @Autowired
+    private com.hal.travelapp.v1.repository.FavoriteBlogRepo favoriteBlogRepo;
+
     private String authToken;
     private Long userId;
     private Long cityId;
@@ -309,6 +315,246 @@ public class BlogControllerTest implements WithAssertions {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData()).isNotNull();
+    }
+
+    @Test
+    void shouldLikeBlogAndReturn200() {
+        // Given - Create an approved blog
+        TravelBlog blog = new TravelBlog();
+        blog.setTitle("Blog to Like");
+        blog.setMainPhotoUrl("main.jpg");
+        blog.setParagraph1("Para 1");
+        blog.setParagraph2("Para 2");
+        blog.setParagraph3("Para 3");
+        blog.setMidPhoto1Url("mid1.jpg");
+        blog.setMidPhoto2Url("mid2.jpg");
+        blog.setMidPhoto3Url("mid3.jpg");
+        blog.setSidePhotoUrl("side.jpg");
+        blog.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog = travelBlogRepo.save(blog);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<com.hal.travelapp.v1.dto.blog.BlogLikeResponseDto>> response = http.exchange(
+                "/api/v1/blogs/" + savedBlog.getId() + "/like",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("BLOG_LIKED");
+        assertThat(response.getBody().getData()).isNotNull();
+        assertThat(response.getBody().getData().liked()).isTrue();
+        assertThat(response.getBody().getData().likeCount()).isGreaterThanOrEqualTo(1L);
+    }
+
+    @Test
+    void shouldUnlikeBlogAndReturn200() {
+        // Given - Create an approved blog and like it first
+        TravelBlog blog = new TravelBlog();
+        blog.setTitle("Blog to Unlike");
+        blog.setMainPhotoUrl("main.jpg");
+        blog.setParagraph1("Para 1");
+        blog.setParagraph2("Para 2");
+        blog.setParagraph3("Para 3");
+        blog.setMidPhoto1Url("mid1.jpg");
+        blog.setMidPhoto2Url("mid2.jpg");
+        blog.setMidPhoto3Url("mid3.jpg");
+        blog.setSidePhotoUrl("side.jpg");
+        blog.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog = travelBlogRepo.save(blog);
+
+        // Like the blog first
+        com.hal.travelapp.v1.entity.domain.BlogLike blogLike = new com.hal.travelapp.v1.entity.domain.BlogLike();
+        blogLike.setUser(userRepo.findById(userId).orElseThrow());
+        blogLike.setBlog(savedBlog);
+        blogLikeRepo.save(blogLike);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<com.hal.travelapp.v1.dto.blog.BlogLikeResponseDto>> response = http.exchange(
+                "/api/v1/blogs/" + savedBlog.getId() + "/like",
+                HttpMethod.DELETE,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("BLOG_UNLIKED");
+        assertThat(response.getBody().getData()).isNotNull();
+        assertThat(response.getBody().getData().liked()).isFalse();
+    }
+
+    @Test
+    void shouldAddToFavoritesAndReturn200() {
+        // Given - Create an approved blog
+        TravelBlog blog = new TravelBlog();
+        blog.setTitle("Blog to Favorite");
+        blog.setMainPhotoUrl("main.jpg");
+        blog.setParagraph1("Para 1");
+        blog.setParagraph2("Para 2");
+        blog.setParagraph3("Para 3");
+        blog.setMidPhoto1Url("mid1.jpg");
+        blog.setMidPhoto2Url("mid2.jpg");
+        blog.setMidPhoto3Url("mid3.jpg");
+        blog.setSidePhotoUrl("side.jpg");
+        blog.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog = travelBlogRepo.save(blog);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<com.hal.travelapp.v1.dto.blog.BlogFavoriteResponseDto>> response = http.exchange(
+                "/api/v1/blogs/" + savedBlog.getId() + "/favorite",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("BLOG_FAVORITED");
+        assertThat(response.getBody().getData()).isNotNull();
+        assertThat(response.getBody().getData().favorited()).isTrue();
+    }
+
+    @Test
+    void shouldRemoveFromFavoritesAndReturn200() {
+        // Given - Create an approved blog and favorite it first
+        TravelBlog blog = new TravelBlog();
+        blog.setTitle("Blog to Unfavorite");
+        blog.setMainPhotoUrl("main.jpg");
+        blog.setParagraph1("Para 1");
+        blog.setParagraph2("Para 2");
+        blog.setParagraph3("Para 3");
+        blog.setMidPhoto1Url("mid1.jpg");
+        blog.setMidPhoto2Url("mid2.jpg");
+        blog.setMidPhoto3Url("mid3.jpg");
+        blog.setSidePhotoUrl("side.jpg");
+        blog.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog = travelBlogRepo.save(blog);
+
+        // Favorite the blog first
+        com.hal.travelapp.v1.entity.domain.FavoriteBlog favoriteBlog = new com.hal.travelapp.v1.entity.domain.FavoriteBlog();
+        favoriteBlog.setUser(userRepo.findById(userId).orElseThrow());
+        favoriteBlog.setBlog(savedBlog);
+        favoriteBlogRepo.save(favoriteBlog);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<com.hal.travelapp.v1.dto.blog.BlogFavoriteResponseDto>> response = http.exchange(
+                "/api/v1/blogs/" + savedBlog.getId() + "/favorite",
+                HttpMethod.DELETE,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("BLOG_UNFAVORITED");
+        assertThat(response.getBody().getData()).isNotNull();
+        assertThat(response.getBody().getData().favorited()).isFalse();
+    }
+
+    @Test
+    void shouldGetFavoriteBlogsAndReturn200() {
+        // Given - Create an approved blog and favorite it
+        TravelBlog blog = new TravelBlog();
+        blog.setTitle("Favorite Blog");
+        blog.setMainPhotoUrl("main.jpg");
+        blog.setParagraph1("Para 1");
+        blog.setParagraph2("Para 2");
+        blog.setParagraph3("Para 3");
+        blog.setMidPhoto1Url("mid1.jpg");
+        blog.setMidPhoto2Url("mid2.jpg");
+        blog.setMidPhoto3Url("mid3.jpg");
+        blog.setSidePhotoUrl("side.jpg");
+        blog.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog = travelBlogRepo.save(blog);
+
+        // Favorite the blog
+        com.hal.travelapp.v1.entity.domain.FavoriteBlog favoriteBlog = new com.hal.travelapp.v1.entity.domain.FavoriteBlog();
+        favoriteBlog.setUser(userRepo.findById(userId).orElseThrow());
+        favoriteBlog.setBlog(savedBlog);
+        favoriteBlogRepo.save(favoriteBlog);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<PageResult<BlogDto>>> response = http.exchange(
+                "/api/v1/blogs/favorites",
+                HttpMethod.GET,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("FAVORITE_BLOGS_RETRIEVED");
+        assertThat(response.getBody().getData()).isNotNull();
+        assertThat(response.getBody().getData().content()).isNotEmpty();
+    }
+
+    @Test
+    void shouldGetFeaturedBlogsAndReturn200() {
+        // Given - Create approved blogs with likes
+        TravelBlog blog1 = new TravelBlog();
+        blog1.setTitle("Popular Blog 1");
+        blog1.setMainPhotoUrl("main1.jpg");
+        blog1.setParagraph1("Para 1");
+        blog1.setParagraph2("Para 2");
+        blog1.setParagraph3("Para 3");
+        blog1.setMidPhoto1Url("mid1.jpg");
+        blog1.setMidPhoto2Url("mid2.jpg");
+        blog1.setMidPhoto3Url("mid3.jpg");
+        blog1.setSidePhotoUrl("side.jpg");
+        blog1.setCity(cityRepo.findById(cityId).orElseThrow());
+        blog1.setAuthor(userRepo.findById(userId).orElseThrow());
+        blog1.setStatus(TravelBlog.BlogStatus.APPROVED);
+        TravelBlog savedBlog1 = travelBlogRepo.save(blog1);
+
+        // Add likes to the blog
+        com.hal.travelapp.v1.entity.domain.BlogLike like1 = new com.hal.travelapp.v1.entity.domain.BlogLike();
+        like1.setUser(userRepo.findById(userId).orElseThrow());
+        like1.setBlog(savedBlog1);
+        blogLikeRepo.save(like1);
+
+        HttpEntity<Void> request = new HttpEntity<>(getAuthHeaders());
+
+        // When
+        ResponseEntity<ApiSuccess<com.hal.travelapp.v1.dto.CursorPageResult<BlogDto>>> response = http.exchange(
+                "/api/v1/blogs/featured?pageSize=10",
+                HttpMethod.GET,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("FEATURED_BLOGS_RETRIEVED");
         assertThat(response.getBody().getData()).isNotNull();
     }
 }

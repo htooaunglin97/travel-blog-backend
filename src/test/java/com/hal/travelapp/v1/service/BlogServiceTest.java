@@ -1,5 +1,6 @@
 package com.hal.travelapp.v1.service;
 
+import com.hal.travelapp.v1.dto.CursorPageResult;
 import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
@@ -41,6 +42,12 @@ class BlogServiceTest {
 
     @Mock
     private UserRepo userRepo;
+
+    @Mock
+    private BlogLikeRepo blogLikeRepo;
+
+    @Mock
+    private FavoriteBlogRepo favoriteBlogRepo;
 
     @InjectMocks
     private BlogServiceImpl blogService;
@@ -116,6 +123,7 @@ class BlogServiceTest {
             saved.setId(1L);
             return saved;
         });
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         BlogDto result = blogService.createBlog(createRequest, 1L);
@@ -132,6 +140,7 @@ class BlogServiceTest {
         verify(travelCategoryRepo).findByIdIn(Set.of(1L));
         verify(userRepo).findById(1L);
         verify(travelBlogRepo).save(any(TravelBlog.class));
+        verify(blogLikeRepo).countLikesByBlogId(1L);
     }
 
     @Test
@@ -167,7 +176,9 @@ class BlogServiceTest {
     @Test
     void shouldGetBlogById() {
         // Given
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         BlogDto result = blogService.getBlogById(1L);
@@ -180,6 +191,7 @@ class BlogServiceTest {
         assertThat(result.authorId()).isEqualTo(1L);
 
         verify(travelBlogRepo).findByIdAndDeletedFalse(1L);
+        verify(blogLikeRepo).countLikesByBlogId(1L);
     }
 
     @Test
@@ -198,9 +210,11 @@ class BlogServiceTest {
     @Test
     void shouldGetAllBlogs() {
         // Given
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
         Page<TravelBlog> blogPage = new PageImpl<>(List.of(blog), pageable, 1);
-
+        when(travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable)).thenReturn(blogPage);
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         PageResult<BlogDto> result = blogService.getAllBlogs(pageable);
@@ -240,6 +254,7 @@ class BlogServiceTest {
         when(cityRepo.findById(1L)).thenReturn(Optional.of(city));
         when(travelCategoryRepo.findByIdIn(Set.of(1L))).thenReturn(List.of(category));
         when(travelBlogRepo.save(any(TravelBlog.class))).thenReturn(blog);
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         BlogDto result = blogService.updateBlog(1L, updateRequest);
@@ -248,6 +263,7 @@ class BlogServiceTest {
         assertThat(result).isNotNull();
         verify(travelBlogRepo).findByIdAndDeletedFalse(1L);
         verify(travelBlogRepo).save(any(TravelBlog.class));
+        verify(blogLikeRepo).countLikesByBlogId(1L);
     }
 
     @Test
@@ -290,6 +306,7 @@ class BlogServiceTest {
     void shouldGetBlogsByAuthor() {
         // Given
         when(travelBlogRepo.findByAuthorIdAndDeletedFalse(1L)).thenReturn(List.of(blog));
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         List<BlogDto> result = blogService.getBlogsByAuthor(1L);
@@ -300,6 +317,7 @@ class BlogServiceTest {
         assertThat(result.getFirst().authorId()).isEqualTo(1L);
 
         verify(travelBlogRepo).findByAuthorIdAndDeletedFalse(1L);
+        verify(blogLikeRepo).countLikesByBlogId(1L);
     }
 
     @Test
@@ -310,6 +328,7 @@ class BlogServiceTest {
         // Given
         blog.setStatus(TravelBlog.BlogStatus.APPROVED);
         when(travelBlogRepo.findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable)).thenReturn(blogPage);
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
         // When
         PageResult<BlogDto> result = blogService.getApprovedBlogs(pageable);
@@ -320,6 +339,102 @@ class BlogServiceTest {
         assertThat(result.content().getFirst().status()).isEqualTo("APPROVED");
 
         verify(travelBlogRepo).findApprovedBlogs(TravelBlog.BlogStatus.APPROVED, pageable);
+    }
+
+    @Test
+    void shouldGetFeaturedBlogsWithCursor() {
+        // Given
+        TravelBlog blog2 = new TravelBlog();
+        blog2.setId(2L);
+        blog2.setTitle("Blog 2");
+        blog2.setStatus(TravelBlog.BlogStatus.APPROVED);
+        blog2.setDeleted(false);
+
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        Pageable pageable = PageRequest.of(0, 11);
+        when(travelBlogRepo.findFeaturedBlogs(TravelBlog.BlogStatus.APPROVED, null, pageable))
+                .thenReturn(List.of(blog, blog2));
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(10L);
+        when(blogLikeRepo.countLikesByBlogId(2L)).thenReturn(5L);
+
+        // When
+        CursorPageResult<BlogDto> result = blogService.getFeaturedBlogs(null, 10, null);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.pageSize()).isEqualTo(10);
+
+        verify(travelBlogRepo).findFeaturedBlogs(TravelBlog.BlogStatus.APPROVED, null, pageable);
+    }
+
+    @Test
+    void shouldGetFeaturedBlogsWithNextCursor() {
+        // Given
+        TravelBlog blog2 = new TravelBlog();
+        blog2.setId(2L);
+        blog2.setTitle("Blog 2");
+        blog2.setStatus(TravelBlog.BlogStatus.APPROVED);
+        blog2.setDeleted(false);
+
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        Pageable pageable = PageRequest.of(0, 11);
+        List<TravelBlog> blogs = List.of(blog, blog2, blog);
+        when(travelBlogRepo.findFeaturedBlogs(TravelBlog.BlogStatus.APPROVED, null, pageable))
+                .thenReturn(blogs);
+        when(blogLikeRepo.countLikesByBlogId(anyLong())).thenReturn(10L);
+
+        // When
+        CursorPageResult<BlogDto> result = blogService.getFeaturedBlogs(null, 2, null);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.hasNext()).isTrue();
+        assertThat(result.nextCursor()).isNotNull();
+
+        verify(travelBlogRepo).findFeaturedBlogs(TravelBlog.BlogStatus.APPROVED, null, pageable);
+    }
+
+    @Test
+    void shouldMapToDtoWithLikeCount() {
+        // Given
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(5L);
+
+        // When
+        BlogDto result = blogService.mapToDto(blog);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.likeCount()).isEqualTo(5L);
+        assertThat(result.isLiked()).isNull();
+        assertThat(result.isFavorited()).isNull();
+
+        verify(blogLikeRepo).countLikesByBlogId(1L);
+    }
+
+    @Test
+    void shouldMapToDtoWithUserInteraction() {
+        // Given
+        blog.setStatus(TravelBlog.BlogStatus.APPROVED);
+        when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(5L);
+        when(blogLikeRepo.existsByUserIdAndBlogId(1L, 1L)).thenReturn(true);
+        when(favoriteBlogRepo.existsByUserIdAndBlogId(1L, 1L)).thenReturn(true);
+
+        // When
+        BlogDto result = blogService.mapToDto(blog, 1L);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.likeCount()).isEqualTo(5L);
+        assertThat(result.isLiked()).isTrue();
+        assertThat(result.isFavorited()).isTrue();
+
+        verify(blogLikeRepo).countLikesByBlogId(1L);
+        verify(blogLikeRepo).existsByUserIdAndBlogId(1L, 1L);
+        verify(favoriteBlogRepo).existsByUserIdAndBlogId(1L, 1L);
     }
 }
 

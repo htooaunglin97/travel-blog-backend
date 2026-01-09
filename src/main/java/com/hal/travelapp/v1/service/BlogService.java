@@ -1,5 +1,6 @@
 package com.hal.travelapp.v1.service;
 
+import com.hal.travelapp.v1.dto.CursorPageResult;
 import com.hal.travelapp.v1.dto.PageResult;
 import com.hal.travelapp.v1.dto.blog.BlogCreateRequestDto;
 import com.hal.travelapp.v1.dto.blog.BlogDto;
@@ -14,6 +15,8 @@ public interface BlogService {
     
     BlogDto getBlogById(Long id);
     
+    BlogDto getBlogById(Long id, Long userId);
+    
     PageResult<BlogDto> getAllBlogs(Pageable pageable);
     
     BlogDto updateBlog(Long id, BlogUpdateRequestDto updateRequest);
@@ -24,7 +27,11 @@ public interface BlogService {
     
     PageResult<BlogDto> getApprovedBlogs(Pageable pageable);
     
+    CursorPageResult<BlogDto> getFeaturedBlogs(String cursor, int pageSize, Long userId);
+    
     BlogDto mapToDto(TravelBlog blog);
+    
+    BlogDto mapToDto(TravelBlog blog, Long userId);
 }
 
 

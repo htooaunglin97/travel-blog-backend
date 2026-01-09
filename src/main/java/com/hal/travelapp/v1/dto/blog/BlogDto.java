@@ -23,6 +23,9 @@ public record BlogDto(
         Long bestTimeEndMonth,
         Set<Long> categoryIds,
         Set<String> categoryNames,
+        long likeCount,
+        Boolean isLiked,
+        Boolean isFavorited,
         Instant createdAt,
         Instant updatedAt
 ) {
