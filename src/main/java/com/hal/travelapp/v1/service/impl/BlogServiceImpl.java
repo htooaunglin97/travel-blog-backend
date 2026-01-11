@@ -9,6 +9,7 @@ import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
 import com.hal.travelapp.v1.service.BlogService;
+import com.hal.travelapp.v1.service.ImageUploadService;
 import com.hal.travelapp.v1.service.mapper.BlogMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,13 +35,31 @@ public class BlogServiceImpl implements BlogService {
     private final UserRepo userRepo;
     private final BlogLikeRepo blogLikeRepo;
     private final FavoriteBlogRepo favoriteBlogRepo;
+    private final ImageUploadService imageUploadService;
 
 
     @Override
     public BlogDto createBlog(BlogCreateRequestDto createRequest, Long authorId) {
+        // Validate required photos
+        if (createRequest.getMainPhoto() == null || createRequest.getMainPhoto().isEmpty()) {
+            throw new IllegalArgumentException("Main photo is required");
+        }
+        if (createRequest.getMidPhoto1() == null || createRequest.getMidPhoto1().isEmpty()) {
+            throw new IllegalArgumentException("First mid photo is required");
+        }
+        if (createRequest.getMidPhoto2() == null || createRequest.getMidPhoto2().isEmpty()) {
+            throw new IllegalArgumentException("Second mid photo is required");
+        }
+        if (createRequest.getMidPhoto3() == null || createRequest.getMidPhoto3().isEmpty()) {
+            throw new IllegalArgumentException("Third mid photo is required");
+        }
+        if (createRequest.getSidePhoto() == null || createRequest.getSidePhoto().isEmpty()) {
+            throw new IllegalArgumentException("Side photo is required");
+        }
+        
         // Validate city exists
-        City city = cityRepo.findById(createRequest.cityId())
-                .orElseThrow(() -> new ResourceNotFoundException("City not found with id: " + createRequest.cityId()));
+        City city = cityRepo.findById(createRequest.getCityId())
+                .orElseThrow(() -> new ResourceNotFoundException("City not found with id: " + createRequest.getCityId()));
 
         // Validate author exists
         User author = userRepo.findById(authorId)
@@ -47,31 +67,38 @@ public class BlogServiceImpl implements BlogService {
 
         // Get categories
         Set<TravelCategory> categories = Set.of();
-        if (createRequest.categoryIds() != null && !createRequest.categoryIds().isEmpty()) {
-            categories = new HashSet<>(travelCategoryRepo.findByIdIn(createRequest.categoryIds()));
+        if (createRequest.getCategoryIds() != null && !createRequest.getCategoryIds().isEmpty()) {
+            categories = new HashSet<>(travelCategoryRepo.findByIdIn(createRequest.getCategoryIds()));
         }
+
+        // Upload images and get URLs
+        String mainPhotoUrl = uploadImageIfPresent(createRequest.getMainPhoto(), "main");
+        String midPhoto1Url = uploadImageIfPresent(createRequest.getMidPhoto1(), "mid1");
+        String midPhoto2Url = uploadImageIfPresent(createRequest.getMidPhoto2(), "mid2");
+        String midPhoto3Url = uploadImageIfPresent(createRequest.getMidPhoto3(), "mid3");
+        String sidePhotoUrl = uploadImageIfPresent(createRequest.getSidePhoto(), "side");
 
         // Create blog entity
         TravelBlog blog = new TravelBlog();
-        blog.setTitle(createRequest.title());
-        blog.setMainPhotoUrl(createRequest.mainPhotoUrl());
-        blog.setParagraph1(createRequest.paragraph1());
-        blog.setParagraph2(createRequest.paragraph2());
-        blog.setParagraph3(createRequest.paragraph3());
-        blog.setMidPhoto1Url(createRequest.midPhoto1Url());
-        blog.setMidPhoto2Url(createRequest.midPhoto2Url());
-        blog.setMidPhoto3Url(createRequest.midPhoto3Url());
-        blog.setSidePhotoUrl(createRequest.sidePhotoUrl());
+        blog.setTitle(createRequest.getTitle());
+        blog.setMainPhotoUrl(mainPhotoUrl);
+        blog.setParagraph1(createRequest.getParagraph1());
+        blog.setParagraph2(createRequest.getParagraph2());
+        blog.setParagraph3(createRequest.getParagraph3());
+        blog.setMidPhoto1Url(midPhoto1Url);
+        blog.setMidPhoto2Url(midPhoto2Url);
+        blog.setMidPhoto3Url(midPhoto3Url);
+        blog.setSidePhotoUrl(sidePhotoUrl);
         blog.setCity(city);
         blog.setAuthor(author);
         blog.setStatus(TravelBlog.BlogStatus.PENDING);
         blog.setTravelCategory(categories);
 
         // Create BestTimeToVisit if provided
-        if (createRequest.bestTimeStartMonth() != null && createRequest.bestTimeEndMonth() != null) {
+        if (createRequest.getBestTimeStartMonth() != null && createRequest.getBestTimeEndMonth() != null) {
             BestTimeToVisit bestTime = new BestTimeToVisit();
-            bestTime.setStartMonth(createRequest.bestTimeStartMonth().intValue());
-            bestTime.setEndMonth(createRequest.bestTimeEndMonth().intValue());
+            bestTime.setStartMonth(createRequest.getBestTimeStartMonth().intValue());
+            bestTime.setEndMonth(createRequest.getBestTimeEndMonth().intValue());
             bestTime.setTravelBlog(blog);
             blog.setBestTimeToVisit(bestTime);
         }
@@ -126,50 +153,90 @@ public class BlogServiceImpl implements BlogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
 
         // Update fields if provided
-        if (updateRequest.title() != null) {
-            blog.setTitle(updateRequest.title());
+        if (updateRequest.getTitle() != null) {
+            blog.setTitle(updateRequest.getTitle());
         }
-        if (updateRequest.mainPhotoUrl() != null) {
-            blog.setMainPhotoUrl(updateRequest.mainPhotoUrl());
+        if (updateRequest.getMainPhoto() != null && !updateRequest.getMainPhoto().isEmpty()) {
+            // Delete old image if exists
+            if (blog.getMainPhotoUrl() != null) {
+                try {
+                    imageUploadService.deleteImage(blog.getMainPhotoUrl());
+                } catch (Exception e) {
+                    // Log error but continue with upload
+                }
+            }
+            blog.setMainPhotoUrl(uploadImageIfPresent(updateRequest.getMainPhoto(), "main"));
         }
-        if (updateRequest.paragraph1() != null) {
-            blog.setParagraph1(updateRequest.paragraph1());
+        if (updateRequest.getParagraph1() != null) {
+            blog.setParagraph1(updateRequest.getParagraph1());
         }
-        if (updateRequest.paragraph2() != null) {
-            blog.setParagraph2(updateRequest.paragraph2());
+        if (updateRequest.getParagraph2() != null) {
+            blog.setParagraph2(updateRequest.getParagraph2());
         }
-        if (updateRequest.paragraph3() != null) {
-            blog.setParagraph3(updateRequest.paragraph3());
+        if (updateRequest.getParagraph3() != null) {
+            blog.setParagraph3(updateRequest.getParagraph3());
         }
-        if (updateRequest.midPhoto1Url() != null) {
-            blog.setMidPhoto1Url(updateRequest.midPhoto1Url());
+        if (updateRequest.getMidPhoto1() != null && !updateRequest.getMidPhoto1().isEmpty()) {
+            // Delete old image if exists
+            if (blog.getMidPhoto1Url() != null) {
+                try {
+                    imageUploadService.deleteImage(blog.getMidPhoto1Url());
+                } catch (Exception e) {
+                    // Log error but continue with upload
+                }
+            }
+            blog.setMidPhoto1Url(uploadImageIfPresent(updateRequest.getMidPhoto1(), "mid1"));
         }
-        if (updateRequest.midPhoto2Url() != null) {
-            blog.setMidPhoto2Url(updateRequest.midPhoto2Url());
+        if (updateRequest.getMidPhoto2() != null && !updateRequest.getMidPhoto2().isEmpty()) {
+            // Delete old image if exists
+            if (blog.getMidPhoto2Url() != null) {
+                try {
+                    imageUploadService.deleteImage(blog.getMidPhoto2Url());
+                } catch (Exception e) {
+                    // Log error but continue with upload
+                }
+            }
+            blog.setMidPhoto2Url(uploadImageIfPresent(updateRequest.getMidPhoto2(), "mid2"));
         }
-        if (updateRequest.midPhoto3Url() != null) {
-            blog.setMidPhoto3Url(updateRequest.midPhoto3Url());
+        if (updateRequest.getMidPhoto3() != null && !updateRequest.getMidPhoto3().isEmpty()) {
+            // Delete old image if exists
+            if (blog.getMidPhoto3Url() != null) {
+                try {
+                    imageUploadService.deleteImage(blog.getMidPhoto3Url());
+                } catch (Exception e) {
+                    // Log error but continue with upload
+                }
+            }
+            blog.setMidPhoto3Url(uploadImageIfPresent(updateRequest.getMidPhoto3(), "mid3"));
         }
-        if (updateRequest.sidePhotoUrl() != null) {
-            blog.setSidePhotoUrl(updateRequest.sidePhotoUrl());
+        if (updateRequest.getSidePhoto() != null && !updateRequest.getSidePhoto().isEmpty()) {
+            // Delete old image if exists
+            if (blog.getSidePhotoUrl() != null) {
+                try {
+                    imageUploadService.deleteImage(blog.getSidePhotoUrl());
+                } catch (Exception e) {
+                    // Log error but continue with upload
+                }
+            }
+            blog.setSidePhotoUrl(uploadImageIfPresent(updateRequest.getSidePhoto(), "side"));
         }
-        if (updateRequest.cityId() != null) {
-            City city = cityRepo.findById(updateRequest.cityId())
-                    .orElseThrow(() -> new ResourceNotFoundException("City not found with id: " + updateRequest.cityId()));
+        if (updateRequest.getCityId() != null) {
+            City city = cityRepo.findById(updateRequest.getCityId())
+                    .orElseThrow(() -> new ResourceNotFoundException("City not found with id: " + updateRequest.getCityId()));
             blog.setCity(city);
         }
-        if (updateRequest.categoryIds() != null && !updateRequest.categoryIds().isEmpty()) {
-            Set<TravelCategory> categories = new HashSet<>(travelCategoryRepo.findByIdIn(updateRequest.categoryIds()));
+        if (updateRequest.getCategoryIds() != null && !updateRequest.getCategoryIds().isEmpty()) {
+            Set<TravelCategory> categories = new HashSet<>(travelCategoryRepo.findByIdIn(updateRequest.getCategoryIds()));
             blog.setTravelCategory(categories);
         }
-        if (updateRequest.bestTimeStartMonth() != null && updateRequest.bestTimeEndMonth() != null) {
+        if (updateRequest.getBestTimeStartMonth() != null && updateRequest.getBestTimeEndMonth() != null) {
             BestTimeToVisit bestTime = blog.getBestTimeToVisit();
             if (bestTime == null) {
                 bestTime = new BestTimeToVisit();
                 bestTime.setTravelBlog(blog);
             }
-            bestTime.setStartMonth(updateRequest.bestTimeStartMonth().intValue());
-            bestTime.setEndMonth(updateRequest.bestTimeEndMonth().intValue());
+            bestTime.setStartMonth(updateRequest.getBestTimeStartMonth().intValue());
+            bestTime.setEndMonth(updateRequest.getBestTimeEndMonth().intValue());
             blog.setBestTimeToVisit(bestTime);
         }
 
@@ -181,6 +248,14 @@ public class BlogServiceImpl implements BlogService {
     public void deleteBlog(Long id) {
         TravelBlog blog = travelBlogRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+        
+        // Delete images from GitHub
+        deleteImageIfPresent(blog.getMainPhotoUrl());
+        deleteImageIfPresent(blog.getMidPhoto1Url());
+        deleteImageIfPresent(blog.getMidPhoto2Url());
+        deleteImageIfPresent(blog.getMidPhoto3Url());
+        deleteImageIfPresent(blog.getSidePhotoUrl());
+        
         blog.setDeleted(true);
         travelBlogRepo.save(blog);
     }
@@ -307,6 +382,30 @@ public class BlogServiceImpl implements BlogService {
                 blog.getCreatedAt(),
                 blog.getUpdatedAt()
         );
+    }
+    
+    /**
+     * Helper method to upload image if present, returns null if file is null or empty
+     */
+    private String uploadImageIfPresent(MultipartFile file, String prefix) {
+        if (file != null && !file.isEmpty()) {
+            return imageUploadService.uploadImage(file, null);
+        }
+        return null;
+    }
+    
+    /**
+     * Helper method to delete image from GitHub if URL is present
+     */
+    private void deleteImageIfPresent(String imageUrl) {
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            try {
+                imageUploadService.deleteImage(imageUrl);
+            } catch (Exception e) {
+                // Log error but don't fail the deletion
+                // Image might already be deleted or URL might be invalid
+            }
+        }
     }
 }
 

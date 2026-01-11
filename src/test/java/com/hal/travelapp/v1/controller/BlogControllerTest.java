@@ -20,9 +20,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.assertj.core.api.WithAssertions;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Set;
 
@@ -107,23 +111,30 @@ public class BlogControllerTest implements WithAssertions {
     @Test
     void shouldCreateBlogAndReturn201() {
         // Given
-        BlogCreateRequestDto createRequest = new BlogCreateRequestDto(
-                "Amazing Yangon",
-                "main.jpg",
-                "First paragraph about Yangon",
-                "Second paragraph about Yangon",
-                "Third paragraph about Yangon",
-                "mid1.jpg",
-                "mid2.jpg",
-                "mid3.jpg",
-                "side.jpg",
-                cityId,
-                1L,
-                3L,
-                Set.of(categoryId)
-        );
+        MockMultipartFile mainPhoto = new MockMultipartFile("mainPhoto", "main.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto1 = new MockMultipartFile("midPhoto1", "mid1.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto2 = new MockMultipartFile("midPhoto2", "mid2.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto3 = new MockMultipartFile("midPhoto3", "mid3.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile sidePhoto = new MockMultipartFile("sidePhoto", "side.jpg", "image/jpeg", "test image content".getBytes());
 
-        HttpEntity<BlogCreateRequestDto> request = new HttpEntity<>(createRequest, getAuthHeaders());
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("title", "Amazing Yangon");
+        body.add("mainPhoto", mainPhoto);
+        body.add("paragraph1", "First paragraph about Yangon");
+        body.add("paragraph2", "Second paragraph about Yangon");
+        body.add("paragraph3", "Third paragraph about Yangon");
+        body.add("midPhoto1", midPhoto1);
+        body.add("midPhoto2", midPhoto2);
+        body.add("midPhoto3", midPhoto3);
+        body.add("sidePhoto", sidePhoto);
+        body.add("cityId", cityId);
+        body.add("bestTimeStartMonth", 1L);
+        body.add("bestTimeEndMonth", 3L);
+        body.add("categoryIds", categoryId);
+
+        HttpHeaders headers = getAuthHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
         // When
         ResponseEntity<ApiSuccess<BlogDto>> response = http.exchange(
@@ -139,7 +150,7 @@ public class BlogControllerTest implements WithAssertions {
         assertThat(response.getBody().getCode()).isEqualTo("BLOG_CREATED");
         assertThat(response.getBody().getData()).isNotNull();
         assertThat(response.getBody().getData().title()).isEqualTo("Amazing Yangon");
-        assertThat(response.getBody().getData().mainPhotoUrl()).isEqualTo("main.jpg");
+        assertThat(response.getBody().getData().mainPhotoUrl()).isNotNull();
     }
 
     @Test
@@ -217,24 +228,24 @@ public class BlogControllerTest implements WithAssertions {
         // Given - Create a blog first
         TravelBlog blog = new TravelBlog();
         blog.setTitle("Original Title");
-        blog.setMainPhotoUrl("main.jpg");
+        blog.setMainPhotoUrl("https://raw.githubusercontent.com/owner/repo/main/images/main.jpg");
         blog.setParagraph1("Para 1");
         blog.setParagraph2("Para 2");
         blog.setParagraph3("Para 3");
-        blog.setMidPhoto1Url("mid1.jpg");
-        blog.setMidPhoto2Url("mid2.jpg");
-        blog.setMidPhoto3Url("mid3.jpg");
-        blog.setSidePhotoUrl("side.jpg");
+        blog.setMidPhoto1Url("https://raw.githubusercontent.com/owner/repo/main/images/mid1.jpg");
+        blog.setMidPhoto2Url("https://raw.githubusercontent.com/owner/repo/main/images/mid2.jpg");
+        blog.setMidPhoto3Url("https://raw.githubusercontent.com/owner/repo/main/images/mid3.jpg");
+        blog.setSidePhotoUrl("https://raw.githubusercontent.com/owner/repo/main/images/side.jpg");
         blog.setCity(cityRepo.findById(cityId).orElseThrow());
         blog.setAuthor(userRepo.findById(userId).orElseThrow());
         TravelBlog savedBlog = travelBlogRepo.save(blog);
 
-        BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
-                "Updated Title",
-                null, null, null, null, null, null, null, null, null, null, null, null
-        );
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("title", "Updated Title");
 
-        HttpEntity<BlogUpdateRequestDto> request = new HttpEntity<>(updateRequest, getAuthHeaders());
+        HttpHeaders headers = getAuthHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
         // When
         ResponseEntity<ApiSuccess<BlogDto>> response = http.exchange(

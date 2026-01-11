@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.stream.Collectors;
 
@@ -17,6 +18,17 @@ public class ApplicationExceptionHandler {
         ApiError error = new ApiError(
                 HttpStatus.CONFLICT,
                 "EMAIL_ALREADY_EXISTS",
+                ex.getMessage(),
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiError> handleMultipartException(MultipartException ex) {
+        ApiError error = new ApiError(
+                HttpStatus.CONFLICT,
+                "MULTIPART_EXCEPTION",
                 ex.getMessage(),
                 ex.getMessage()
         );

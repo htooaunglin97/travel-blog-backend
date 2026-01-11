@@ -10,6 +10,7 @@ import com.hal.travelapp.v1.dto.blog.BlogLikeResponseDto;
 import com.hal.travelapp.v1.dto.blog.BlogUpdateRequestDto;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +19,8 @@ import java.util.List;
 @RequestMapping("/api/v1/blogs")
 public interface BlogApi {
 
-    @PostMapping
-    ResponseEntity<ApiSuccess<BlogDto>> createBlog(@RequestBody @Valid BlogCreateRequestDto request);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<ApiSuccess<BlogDto>> createBlog(@ModelAttribute @Valid BlogCreateRequestDto request);
 
     @GetMapping("/{id}")
     ResponseEntity<ApiSuccess<BlogDto>> getBlogById(@PathVariable Long id);
@@ -29,8 +30,8 @@ public interface BlogApi {
            Pageable pageable
     );
 
-    @PutMapping("/{id}")
-    ResponseEntity<ApiSuccess<BlogDto>> updateBlog(@PathVariable Long id, @RequestBody BlogUpdateRequestDto request);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<ApiSuccess<BlogDto>> updateBlog(@PathVariable Long id, @ModelAttribute @Valid BlogUpdateRequestDto request);
 
     @DeleteMapping("/{id}")
     ResponseEntity<ApiSuccess<Void>> deleteBlog(@PathVariable Long id);

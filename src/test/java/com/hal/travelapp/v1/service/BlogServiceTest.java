@@ -9,6 +9,7 @@ import com.hal.travelapp.v1.entity.domain.*;
 import com.hal.travelapp.v1.entity.enums.RoleEnum;
 import com.hal.travelapp.v1.exception.ResourceNotFoundException;
 import com.hal.travelapp.v1.repository.*;
+import com.hal.travelapp.v1.service.ImageUploadService;
 import com.hal.travelapp.v1.service.impl.BlogServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.Instant;
 import java.util.List;
@@ -48,6 +50,9 @@ class BlogServiceTest {
 
     @Mock
     private FavoriteBlogRepo favoriteBlogRepo;
+
+    @Mock
+    private ImageUploadService imageUploadService;
 
     @InjectMocks
     private BlogServiceImpl blogService;
@@ -99,22 +104,32 @@ class BlogServiceTest {
     @Test
     void shouldCreateBlog() {
         // Given
-        BlogCreateRequestDto createRequest = new BlogCreateRequestDto(
-                "Amazing Yangon",
-                "main.jpg",
-                "First paragraph",
-                "Second paragraph",
-                "Third paragraph",
-                "mid1.jpg",
-                "mid2.jpg",
-                "mid3.jpg",
-                "side.jpg",
-                1L,
-                1L,
-                3L,
-                Set.of(1L)
-        );
+        MockMultipartFile mainPhoto = new MockMultipartFile("mainPhoto", "main.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto1 = new MockMultipartFile("midPhoto1", "mid1.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto2 = new MockMultipartFile("midPhoto2", "mid2.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto3 = new MockMultipartFile("midPhoto3", "mid3.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile sidePhoto = new MockMultipartFile("sidePhoto", "side.jpg", "image/jpeg", "test image content".getBytes());
 
+        BlogCreateRequestDto createRequest = new BlogCreateRequestDto();
+        createRequest.setTitle("Amazing Yangon");
+        createRequest.setMainPhoto(mainPhoto);
+        createRequest.setParagraph1("First paragraph");
+        createRequest.setParagraph2("Second paragraph");
+        createRequest.setParagraph3("Third paragraph");
+        createRequest.setMidPhoto1(midPhoto1);
+        createRequest.setMidPhoto2(midPhoto2);
+        createRequest.setMidPhoto3(midPhoto3);
+        createRequest.setSidePhoto(sidePhoto);
+        createRequest.setCityId(1L);
+        createRequest.setBestTimeStartMonth(1L);
+        createRequest.setBestTimeEndMonth(3L);
+        createRequest.setCategoryIds(Set.of(1L));
+
+        when(imageUploadService.uploadImage(mainPhoto, null)).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/main.jpg");
+        when(imageUploadService.uploadImage(midPhoto1, null)).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/mid1.jpg");
+        when(imageUploadService.uploadImage(midPhoto2, null)).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/mid2.jpg");
+        when(imageUploadService.uploadImage(midPhoto3, null)).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/mid3.jpg");
+        when(imageUploadService.uploadImage(sidePhoto, null)).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/side.jpg");
         when(cityRepo.findById(1L)).thenReturn(Optional.of(city));
         when(travelCategoryRepo.findByIdIn(Set.of(1L))).thenReturn(List.of(category));
         when(userRepo.findById(1L)).thenReturn(Optional.of(author));
@@ -131,11 +146,12 @@ class BlogServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("Amazing Yangon");
-        assertThat(result.mainPhotoUrl()).isEqualTo("main.jpg");
+        assertThat(result.mainPhotoUrl()).isNotNull();
         assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.cityId()).isEqualTo(1L);
         assertThat(result.authorId()).isEqualTo(1L);
 
+        verify(imageUploadService, times(5)).uploadImage(any(), any());
         verify(cityRepo).findById(1L);
         verify(travelCategoryRepo).findByIdIn(Set.of(1L));
         verify(userRepo).findById(1L);
@@ -146,21 +162,26 @@ class BlogServiceTest {
     @Test
     void shouldThrowExceptionWhenCityNotFound() {
         // Given
-        BlogCreateRequestDto createRequest = new BlogCreateRequestDto(
-                "Amazing Yangon",
-                "main.jpg",
-                "First paragraph",
-                "Second paragraph",
-                "Third paragraph",
-                "mid1.jpg",
-                "mid2.jpg",
-                "mid3.jpg",
-                "side.jpg",
-                999L,
-                1L,
-                3L,
-                Set.of(1L)
-        );
+        MockMultipartFile mainPhoto = new MockMultipartFile("mainPhoto", "main.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto1 = new MockMultipartFile("midPhoto1", "mid1.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto2 = new MockMultipartFile("midPhoto2", "mid2.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile midPhoto3 = new MockMultipartFile("midPhoto3", "mid3.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile sidePhoto = new MockMultipartFile("sidePhoto", "side.jpg", "image/jpeg", "test image content".getBytes());
+
+        BlogCreateRequestDto createRequest = new BlogCreateRequestDto();
+        createRequest.setTitle("Amazing Yangon");
+        createRequest.setMainPhoto(mainPhoto);
+        createRequest.setParagraph1("First paragraph");
+        createRequest.setParagraph2("Second paragraph");
+        createRequest.setParagraph3("Third paragraph");
+        createRequest.setMidPhoto1(midPhoto1);
+        createRequest.setMidPhoto2(midPhoto2);
+        createRequest.setMidPhoto3(midPhoto3);
+        createRequest.setSidePhoto(sidePhoto);
+        createRequest.setCityId(999L);
+        createRequest.setBestTimeStartMonth(1L);
+        createRequest.setBestTimeEndMonth(3L);
+        createRequest.setCategoryIds(Set.of(1L));
 
         when(cityRepo.findById(999L)).thenReturn(Optional.empty());
 
@@ -234,25 +255,31 @@ class BlogServiceTest {
     @Test
     void shouldUpdateBlog() {
         // Given
-        BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
-                "Updated Title",
-                "new-main.jpg",
-                "Updated paragraph 1",
-                "Updated paragraph 2",
-                "Updated paragraph 3",
-                "new-mid1.jpg",
-                "new-mid2.jpg",
-                "new-mid3.jpg",
-                "new-side.jpg",
-                1L,
-                4L,
-                6L,
-                Set.of(1L)
-        );
+        MockMultipartFile newMainPhoto = new MockMultipartFile("mainPhoto", "new-main.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile newMidPhoto1 = new MockMultipartFile("midPhoto1", "new-mid1.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile newMidPhoto2 = new MockMultipartFile("midPhoto2", "new-mid2.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile newMidPhoto3 = new MockMultipartFile("midPhoto3", "new-mid3.jpg", "image/jpeg", "test image content".getBytes());
+        MockMultipartFile newSidePhoto = new MockMultipartFile("sidePhoto", "new-side.jpg", "image/jpeg", "test image content".getBytes());
+
+        BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto();
+        updateRequest.setTitle("Updated Title");
+        updateRequest.setMainPhoto(newMainPhoto);
+        updateRequest.setParagraph1("Updated paragraph 1");
+        updateRequest.setParagraph2("Updated paragraph 2");
+        updateRequest.setParagraph3("Updated paragraph 3");
+        updateRequest.setMidPhoto1(newMidPhoto1);
+        updateRequest.setMidPhoto2(newMidPhoto2);
+        updateRequest.setMidPhoto3(newMidPhoto3);
+        updateRequest.setSidePhoto(newSidePhoto);
+        updateRequest.setCityId(1L);
+        updateRequest.setBestTimeStartMonth(4L);
+        updateRequest.setBestTimeEndMonth(6L);
+        updateRequest.setCategoryIds(Set.of(1L));
 
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
         when(cityRepo.findById(1L)).thenReturn(Optional.of(city));
         when(travelCategoryRepo.findByIdIn(Set.of(1L))).thenReturn(List.of(category));
+        when(imageUploadService.uploadImage(any(), any())).thenReturn("https://raw.githubusercontent.com/owner/repo/main/images/new-image.jpg");
         when(travelBlogRepo.save(any(TravelBlog.class))).thenReturn(blog);
         when(blogLikeRepo.countLikesByBlogId(1L)).thenReturn(0L);
 
@@ -262,6 +289,7 @@ class BlogServiceTest {
         // Then
         assertThat(result).isNotNull();
         verify(travelBlogRepo).findByIdAndDeletedFalse(1L);
+        verify(imageUploadService, times(5)).uploadImage(any(), any());
         verify(travelBlogRepo).save(any(TravelBlog.class));
         verify(blogLikeRepo).countLikesByBlogId(1L);
     }
@@ -269,12 +297,9 @@ class BlogServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistentBlog() {
         // Given
-        BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto(
-                "Updated Title",
-                null, null, null, null, null,
-                null, null, null, null, null, 4L,
-                null
-        );
+        BlogUpdateRequestDto updateRequest = new BlogUpdateRequestDto();
+        updateRequest.setTitle("Updated Title");
+        updateRequest.setBestTimeStartMonth(4L);
 
         when(travelBlogRepo.findByIdAndDeletedFalse(999L)).thenReturn(Optional.empty());
 
@@ -292,6 +317,8 @@ class BlogServiceTest {
         // Given
         when(travelBlogRepo.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(blog));
         when(travelBlogRepo.save(any(TravelBlog.class))).thenReturn(blog);
+        // Mock image deletion - may throw exception if image doesn't exist, which is fine
+        doNothing().when(imageUploadService).deleteImage(anyString());
 
         // When
         blogService.deleteBlog(1L);
@@ -299,6 +326,7 @@ class BlogServiceTest {
         // Then
         assertThat(blog.isDeleted()).isTrue();
         verify(travelBlogRepo).findByIdAndDeletedFalse(1L);
+        verify(imageUploadService, atLeastOnce()).deleteImage(anyString());
         verify(travelBlogRepo).save(blog);
     }
 

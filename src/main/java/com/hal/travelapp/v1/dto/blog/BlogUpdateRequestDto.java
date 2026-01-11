@@ -1,41 +1,43 @@
 package com.hal.travelapp.v1.dto.blog;
 
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
-public record BlogUpdateRequestDto(
-        @Size(max = 200, message = "Title must not exceed 200 characters")
-        String title,
+@Getter
+@Setter
+public class BlogUpdateRequestDto {
+    
+    @Size(max = 200, message = "Title must not exceed 200 characters")
+    private String title;
 
-        String mainPhotoUrl,
+    private MultipartFile mainPhoto;
 
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph1,
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph1;
 
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph2,
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph2;
 
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph3,
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph3;
 
-        String midPhoto1Url,
+    private MultipartFile midPhoto1;
 
-        String midPhoto2Url,
+    private MultipartFile midPhoto2;
 
-        String midPhoto3Url,
+    private MultipartFile midPhoto3;
 
-        String sidePhotoUrl,
+    private MultipartFile sidePhoto;
 
-        Long cityId,
+    private Long cityId;
 
-        Long bestTimeStartMonth,
+    private Long bestTimeStartMonth;
 
-        Long bestTimeEndMonth,
+    private Long bestTimeEndMonth;
 
-        Set<Long> categoryIds
-
-) {
+    private Set<Long> categoryIds;
 }
-
-

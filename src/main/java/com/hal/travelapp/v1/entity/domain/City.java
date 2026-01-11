@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "state_and_division_tbl")
+@Table(name = "city_tbl")
 @Getter
 @Setter
 public class City extends BaseEntity

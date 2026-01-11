@@ -3,50 +3,48 @@ package com.hal.travelapp.v1.dto.blog;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
-public record BlogCreateRequestDto(
-        @NotBlank(message = "Title is required")
-        @Size(max = 200, message = "Title must not exceed 200 characters")
-        String title,
+@Getter
+@Setter
+public class BlogCreateRequestDto {
+    
+    @NotBlank(message = "Title is required")
+    @Size(max = 200, message = "Title must not exceed 200 characters")
+    private String title;
 
-        @NotBlank(message = "Main photo URL is required")
-        String mainPhotoUrl,
+    private MultipartFile mainPhoto;
 
-        @NotBlank(message = "First paragraph is required")
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph1,
+    @NotBlank(message = "First paragraph is required")
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph1;
 
-        @NotBlank(message = "Second paragraph is required")
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph2,
+    @NotBlank(message = "Second paragraph is required")
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph2;
 
-        @NotBlank(message = "Third paragraph is required")
-        @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
-        String paragraph3,
+    @NotBlank(message = "Third paragraph is required")
+    @Size(max = 1000, message = "Paragraph must not exceed 1000 characters")
+    private String paragraph3;
 
-        @NotBlank(message = "First mid photo URL is required")
-        String midPhoto1Url,
+    private MultipartFile midPhoto1;
 
-        @NotBlank(message = "Second mid photo URL is required")
-        String midPhoto2Url,
+    private MultipartFile midPhoto2;
 
-        @NotBlank(message = "Third mid photo URL is required")
-        String midPhoto3Url,
+    private MultipartFile midPhoto3;
 
-        @NotBlank(message = "Side photo URL is required")
-        String sidePhotoUrl,
+    private MultipartFile sidePhoto;
 
-        @NotNull(message = "City ID is required")
-        Long cityId,
+    @NotNull(message = "City ID is required")
+    private Long cityId;
 
-        Long bestTimeStartMonth,
+    private Long bestTimeStartMonth;
 
-        Long bestTimeEndMonth,
+    private Long bestTimeEndMonth;
 
-        Set<Long> categoryIds
-) {
+    private Set<Long> categoryIds;
 }
-
-

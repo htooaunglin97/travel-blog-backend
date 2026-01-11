@@ -38,7 +38,7 @@ public class BlogController implements BlogApi {
     }
 
     @Override
-    public ResponseEntity<ApiSuccess<BlogDto>> createBlog(@RequestBody @Valid BlogCreateRequestDto request) {
+    public ResponseEntity<ApiSuccess<BlogDto>> createBlog(@ModelAttribute @Valid BlogCreateRequestDto request) {
         Long authorId = SecurityContextUtil.getCurrentUserId(userRepo);
         BlogDto blogDto = blogService.createBlog(request, authorId);
 
@@ -84,7 +84,7 @@ public class BlogController implements BlogApi {
     }
 
     @Override
-    public ResponseEntity<ApiSuccess<BlogDto>> updateBlog(@PathVariable Long id, @RequestBody @Valid BlogUpdateRequestDto request) {
+    public ResponseEntity<ApiSuccess<BlogDto>> updateBlog(@PathVariable Long id, @ModelAttribute @Valid BlogUpdateRequestDto request) {
         BlogDto blogDto = blogService.updateBlog(id, request);
 
         ApiSuccess<BlogDto> body = new ApiSuccess<>(
